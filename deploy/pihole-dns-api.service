@@ -1,0 +1,27 @@
+[Unit]
+Description=Pi-hole DNS API
+Documentation=https://github.com/ExactDoug/pihole-dns-api
+After=network.target pihole-FTL.service
+Wants=pihole-FTL.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/pihole-dns-api
+ExecStart=/usr/bin/node /opt/pihole-dns-api/index.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=pihole-dns-api
+Environment=NODE_ENV=production
+
+# Security hardening
+ProtectSystem=strict
+ReadWritePaths=/etc/pihole
+ProtectHome=yes
+NoNewPrivileges=no
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target
