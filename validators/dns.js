@@ -2,18 +2,29 @@ function isValidIPv4(ip) {
   const parts = ip.split('.');
   if (parts.length !== 4) return false;
   return parts.every(part => {
+    if (!/^\d{1,3}$/.test(part)) return false;
+    if (part.length > 1 && part[0] === '0') return false;
     const num = Number(part);
-    return /^\d{1,3}$/.test(part) && num >= 0 && num <= 255;
+    return num >= 0 && num <= 255;
   });
 }
 
 function isValidIPv6(ip) {
-  const pattern = /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/;
-  const compressedPattern = /^(([0-9a-fA-F]{1,4}:)*):?(([0-9a-fA-F]{1,4}:)*[0-9a-fA-F]{1,4})?$/;
-  if (pattern.test(ip)) return true;
+  if (!ip || typeof ip !== 'string') return false;
+  // Full form: 8 groups of hex
+  if (/^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$/.test(ip)) return true;
+  // Must contain :: for compressed form
   if (!ip.includes('::')) return false;
+  // Only one :: allowed
   if ((ip.match(/::/g) || []).length > 1) return false;
-  return compressedPattern.test(ip);
+  // Split on :: and validate each side
+  const sides = ip.split('::');
+  const left = sides[0] ? sides[0].split(':') : [];
+  const right = sides[1] ? sides[1].split(':') : [];
+  // Total groups must be <= 8
+  if (left.length + right.length > 7) return false;
+  const hexGroup = /^[0-9a-fA-F]{1,4}$/;
+  return left.every(g => hexGroup.test(g)) && right.every(g => hexGroup.test(g));
 }
 
 function isValidIP(ip) {
