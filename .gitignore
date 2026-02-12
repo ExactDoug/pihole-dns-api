@@ -5,3 +5,7 @@ coverage/
 
 mcp-server/node_modules/
 mcp-server/build/
+
+config.yaml
+mcp-session.jsonl
+.mcp.json

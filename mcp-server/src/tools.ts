@@ -93,9 +93,9 @@ export function registerTools(server: McpServer): void {
         const health = await client.health();
         const lines = [
           `Status: ${health.status}`,
-          `Uptime: ${health.uptime}s`,
-          `DNS File: ${health.checks.dnsFile}`,
-          `Pi-hole: ${health.checks.pihole}`,
+          `Uptime: ${Math.round(health.uptime)}s`,
+          `DNS File: ${JSON.stringify(health.checks.dnsFile)}`,
+          `Pi-hole: ${JSON.stringify(health.checks.pihole)}`,
         ];
         return { content: [{ type: "text", text: lines.join("\n") }] };
       } catch (err) {
