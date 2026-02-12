@@ -1,20 +1,17 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const fs = require('fs');
+const cors = require('cors');
 const { exec } = require('child_process');
-const path = require('path');
+const config = require('./config');
 
 const app = express();
-const port = 3000; // You can change the port if needed
-const homeListFile = '/etc/pihole/home.list';
 
-// Middleware to parse JSON body
-app.use(bodyParser.json());
+app.use(cors());
+app.use(express.json());
 
-// Function to check if IP + record is present in home.list
 function isRecordPresent(IP, record) {
   try {
-    const data = fs.readFileSync(homeListFile, 'utf8');
+    const data = fs.readFileSync(config.dnsFilePath, 'utf8');
     const lines = data.trim().split('\n');
     for (const line of lines) {
       const [storedIP, storedRecord] = line.trim().split(' ');
@@ -24,145 +21,109 @@ function isRecordPresent(IP, record) {
     }
     return false;
   } catch (err) {
-    console.error(`Error reading ${homeListFile}: ${err.message}`);
+    console.error(`Error reading ${config.dnsFilePath}: ${err.message}`);
     return false;
   }
 }
 
-// POST endpoint to accept JSON input for adding a record
 app.post('/add', (req, res) => {
-    const { IP, record } = req.body;
-    if (!IP || !record) {
-      return res.status(400).json({ error: 'Both IP and record fields are required' });
-    }
-      // Check if the record is present
+  const { IP, record } = req.body;
+  if (!IP || !record) {
+    return res.status(400).json({ error: 'Both IP and record fields are required' });
+  }
+
   if (isRecordPresent(IP, record)) {
     return res.status(409).json({ message: 'Record already present' });
   }
 
-  
-    // Copy home.list to home.list.old or create home.list.old if it doesn't exist
-    const sourceFilePath = "/etc/pihole/home.list"
-    const destinationFilePath = "/etc/pihole/home.list.old"
-    
-    fs.copyFile(sourceFilePath, destinationFilePath, (err) => {
-      if (err && err.code !== 'ENOENT') {
-        console.error('Error copying file:', err);
-        return res.status(500).json({ error: 'Error copying home.list to home.list.old' });
+  fs.copyFile(config.dnsFilePath, config.dnsFileBackupPath, (err) => {
+    if (err && err.code !== 'ENOENT') {
+      console.error('Error copying file:', err);
+      return res.status(500).json({ error: 'Error creating backup' });
+    }
+
+    fs.appendFile(config.dnsFilePath, `${IP} ${record}\n`, (err) => {
+      if (err) {
+        console.error('Error appending record:', err);
+        return res.status(500).json({ error: 'Error appending record' });
       }
-  
-      // Add the record to home.list
-      fs.appendFile(sourceFilePath, `${IP} ${record}\n`, (err) => {
-        if (err) {
-          console.error('Error appending record to home.list:', err);
-          return res.status(500).json({ error: 'Error appending record to home.list' });
+
+      exec(config.piholeRestartCmd, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error restarting DNS: ${error.message}`);
+          return res.status(500).json({ error: 'Error restarting DNS service' });
         }
-        
-        // Restart pihole-FTL service
-        exec('service pihole-FTL restart', (error, stdout, stderr) => {
-          if (error) {
-            console.error(`Error restarting pihole-FTL service: ${error.message}`);
-            return res.status(500).json({ error: 'Error restarting pihole-FTL service' });
-          }
-          if (stderr) {
-            console.error(`pihole-FTL service restart stderr: ${stderr}`);
-          }
-          console.log(`pihole-FTL service restart stdout: ${stdout}`);
-          // Sending back the success response
-          res.json({ message: 'Record added successfully and pihole-FTL service restarted' });
-        });
+        res.json({ message: 'Record added successfully and DNS service restarted' });
       });
     });
   });
-  
-// delete endpoint to accept JSON input for deleting a record
+});
+
 app.post('/delete', (req, res) => {
   const { IP, record } = req.body;
   if (!IP || !record) {
     return res.status(400).json({ error: 'Both IP and record fields are required' });
   }
 
-  // Check if the record is present
   if (!isRecordPresent(IP, record)) {
     return res.status(404).json({ message: 'Record not found' });
   }
 
-  // Remove the record from home.list
   try {
-    const data = fs.readFileSync(homeListFile, 'utf8');
+    const data = fs.readFileSync(config.dnsFilePath, 'utf8');
     const newData = data.split('\n').filter(line => {
       const [storedIP, storedRecord] = line.trim().split(' ');
       return !(storedIP === IP && storedRecord === record);
     }).join('\n');
-    fs.writeFileSync(homeListFile, newData);
+    fs.writeFileSync(config.dnsFilePath, newData);
   } catch (err) {
-    console.error(`Error deleting record from ${homeListFile}: ${err.message}`);
+    console.error(`Error deleting record: ${err.message}`);
     return res.status(500).json({ error: 'Error deleting record' });
   }
 
-  // Restart pihole-FTL service
-  exec('service pihole-FTL restart', (error, stdout, stderr) => {
+  exec(config.piholeRestartCmd, (error, stdout, stderr) => {
     if (error) {
-      console.error(`Error restarting pihole-FTL service: ${error.message}`);
-      return res.status(500).json({ error: 'Error restarting pihole-FTL service' });
+      console.error(`Error restarting DNS: ${error.message}`);
+      return res.status(500).json({ error: 'Error restarting DNS service' });
     }
-    if (stderr) {
-      console.error(`pihole-FTL service restart stderr: ${stderr}`);
-    }
-    console.log(`pihole-FTL service restart stdout: ${stdout}`);
-    // Sending back the success response
-    res.json({ message: 'Record deleted successfully and pihole-FTL service restarted' });
+    res.json({ message: 'Record deleted successfully and DNS service restarted' });
   });
 });
 
-// reset endpoint to for resetting the record.
 app.get('/reset', (req, res) => {
-
-  // Copy home.list to home.list.old or create home.list.old if it doesn't exist
-  const sourceFilePath = "/etc/pihole/home.list.old"
-  const destinationFilePath = "/etc/pihole/home.list"
-  fs.copyFile(sourceFilePath, destinationFilePath, (err) => {
-    if (err && err.code !== 'ENOENT') {
-      console.error('Error copying file:', err);
-      return res.status(500).json({ error: 'Error copying home.list to home.list.old' });
+  fs.copyFile(config.dnsFileBackupPath, config.dnsFilePath, (err) => {
+    if (err) {
+      console.error('Error restoring backup:', err);
+      return res.status(500).json({ error: 'Error restoring from backup' });
     }
-    // Restart pihole-FTL service
-    exec('service pihole-FTL restart', (error, stdout, stderr) => {
+
+    exec(config.piholeRestartCmd, (error, stdout, stderr) => {
       if (error) {
-        console.error(`Error restarting pihole-FTL service: ${error.message}`);
-        return res.status(500).json({ error: 'Error restarting pihole-FTL service' });
+        console.error(`Error restarting DNS: ${error.message}`);
+        return res.status(500).json({ error: 'Error restarting DNS service' });
       }
-      if (stderr) {
-        console.error(`pihole-FTL service restart stderr: ${stderr}`);
-      }
-      console.log(`pihole-FTL service restart stdout: ${stdout}`);
-      // Sending back the success response
-      res.json({ message: 'Record added successfully and pihole-FTL service restarted' });
+      res.json({ message: 'Records reset successfully and DNS service restarted' });
     });
   });
-
 });
 
-// Route to handle GET requests
 app.get('/', (req, res) => {
-    try {
-      // Read the home.list file and parse its contents
-      const data = fs.readFileSync(homeListFile, 'utf8');
-      const lines = data.trim().split('\n');
-      const records = lines.map(line => {
+  try {
+    const data = fs.readFileSync(config.dnsFilePath, 'utf8');
+    const lines = data.trim().split('\n');
+    const records = lines
+      .filter(line => line.trim())
+      .map(line => {
         const [IP, record] = line.trim().split(' ');
         return { IP, record };
       });
-  
-      // Send the records as JSON response
-      res.json(records);
-    } catch (err) {
-      console.error(`Error reading ${homeListFile}: ${err.message}`);
-      res.status(500).json({ error: 'Internal Server Error' });
-    }
-  });
+    res.json(records);
+  } catch (err) {
+    console.error(`Error reading ${config.dnsFilePath}: ${err.message}`);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
 
-// Start the server
-app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+app.listen(config.port, () => {
+  console.log(`Pi-hole DNS API running on http://localhost:${config.port}`);
 });
