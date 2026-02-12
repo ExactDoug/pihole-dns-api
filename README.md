@@ -189,6 +189,30 @@ npm run dns -- health
 npm run dns -- reset
 ```
 
+## MCP Server
+
+The `mcp-server/` directory contains an MCP (Model Context Protocol) server that enables Claude Desktop, Claude Code, and other MCP-compatible tools to manage Pi-hole DNS records directly.
+
+### Quick Start
+
+```bash
+cd mcp-server
+npm install
+npm run build
+```
+
+### Tools Provided
+
+| Tool | Description |
+|------|-------------|
+| `pihole_dns_list` | List all local DNS records |
+| `pihole_dns_add` | Add a DNS record |
+| `pihole_dns_delete` | Delete a DNS record |
+| `pihole_dns_reset` | Restore from backup |
+| `pihole_dns_health` | Check API server health |
+
+See [`mcp-server/README.md`](mcp-server/README.md) for configuration and setup details.
+
 ## Deployment
 
 ### systemd Service
@@ -249,6 +273,14 @@ validators/
 deploy/
   pihole-dns-api.service  systemd unit file
   install.sh              Automated installer
+mcp-server/
+  src/
+    index.ts              MCP server entry point
+    tools.ts              Tool registrations (5 tools)
+    client.ts             Typed wrapper for PiholeDnsClient
+  package.json            ESM package with MCP SDK
+  tsconfig.json           TypeScript configuration
+  README.md               MCP server documentation
 tests/
   validators.test.js      Validator unit tests
   routes.test.js          Endpoint integration tests
