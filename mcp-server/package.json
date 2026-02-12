@@ -1,0 +1,26 @@
+{
+  "name": "pihole-dns-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for managing Pi-hole local DNS records",
+  "type": "module",
+  "main": "build/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js",
+    "inspect": "npx @modelcontextprotocol/inspector node build/index.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["pihole", "dns", "mcp", "model-context-protocol"],
+  "author": "ExactDoug",
+  "license": "ISC",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "typescript": "^5.8.3"
+  }
+}
