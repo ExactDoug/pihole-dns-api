@@ -89,3 +89,13 @@ This launches the MCP Inspector UI where you can see all registered tools and ca
 **Authentication errors:** If the API has authentication enabled, set the `API_KEY` environment variable to match the API's configured key.
 
 **Build errors:** Run `npm install` first. Requires Node.js 18+ and TypeScript 5+.
+
+## Security
+
+The `config.yaml` and `.mcp.json` files may contain API keys and internal hostnames. These are excluded from version control via `.gitignore`. Never commit files containing real credentials.
+
+To generate a secure API key:
+
+```bash
+openssl rand -hex 32
+```

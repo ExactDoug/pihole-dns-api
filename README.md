@@ -213,6 +213,25 @@ npm run build
 
 See [`mcp-server/README.md`](mcp-server/README.md) for configuration and setup details.
 
+### Using with mcp-debug proxy
+
+For development and debugging, you can use the [mcp-debug](https://github.com/ExactDoug/mcp-debug) proxy. Create a `config.yaml` in the project root:
+
+```yaml
+servers:
+  - name: pihole-dns
+    prefix: pihole
+    transport: stdio
+    command: node
+    args: ["mcp-server/build/index.js"]
+    env:
+      PIHOLE_DNS_API_URL: "http://<PIHOLE_IP>:3000"
+      API_KEY: "<YOUR_API_KEY>"
+    timeout: 30s
+```
+
+Then configure `.mcp.json` to point to the proxy. See mcp-debug documentation for details.
+
 ## Deployment
 
 ### systemd Service
