@@ -3,7 +3,7 @@ const https = require('https');
 
 class PiholeDnsClient {
   constructor(options = {}) {
-    this.baseUrl = options.baseUrl || process.env.PIHOLE_DNS_API_URL || 'http://172.30.0.110:3000';
+    this.baseUrl = options.baseUrl || process.env.PIHOLE_DNS_API_URL || 'http://localhost:3000';
     this.apiKey = options.apiKey || process.env.API_KEY || '';
     this.timeout = options.timeout || 10000;
   }
