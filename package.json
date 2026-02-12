@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "jest --verbose"
+    "test": "jest --verbose",
+    "dns": "node client/cli.js"
   },
   "engines": {
     "node": ">=16.0.0"
