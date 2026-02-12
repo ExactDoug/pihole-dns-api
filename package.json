@@ -1,19 +1,27 @@
 {
-  "name": "pihole_dns_api",
-  "version": "1.0.0",
-  "description": "",
+  "name": "pihole-dns-api",
+  "version": "2.0.0",
+  "description": "REST API for managing Pi-hole local DNS records",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "jest --verbose"
   },
-  "keywords": [],
-  "author": "",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "keywords": ["pihole", "dns", "api"],
+  "author": "ExactDoug",
   "license": "ISC",
   "dependencies": {
-    "child_process": "^1.0.2",
     "cors": "^2.8.5",
-    "express": "^4.18.2",
-    "nodemon": "^3.0.3"
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.3",
+    "supertest": "^6.3.3"
   }
 }
