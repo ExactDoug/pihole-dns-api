@@ -33,7 +33,7 @@ interface PiholeDnsClientInstance {
 
 export function createClient(): PiholeDnsClientInstance {
   const baseUrl = process.env.PIHOLE_DNS_API_URL || "http://localhost:3000";
-  const apiKey = process.env.API_KEY || "";
+  const apiKey = process.env.PI_HOLE_API_KEY || "";
 
   return new PiholeDnsClient({ baseUrl, apiKey }) as PiholeDnsClientInstance;
 }

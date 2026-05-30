@@ -22,7 +22,7 @@ The server reads two environment variables:
 | Variable | Description | Default |
 |----------|-------------|---------|
 | `PIHOLE_DNS_API_URL` | URL of the Pi-hole DNS REST API | `http://localhost:3000` |
-| `API_KEY` | API key for authentication (if enabled on the API) | _(empty — no auth)_ |
+| `PI_HOLE_API_KEY` | API key for authentication (if enabled on the API) | _(empty — no auth)_ |
 
 ## Claude Desktop
 
@@ -36,7 +36,7 @@ Add to your Claude Desktop config (`claude_desktop_config.json`):
       "args": ["C:\\dev\\projects\\github\\pi-hole-api\\mcp-server\\build\\index.js"],
       "env": {
         "PIHOLE_DNS_API_URL": "http://<PIHOLE_IP>:3000",
-        "API_KEY": "<YOUR_API_KEY>"
+        "PI_HOLE_API_KEY": "<YOUR_API_KEY>"
       }
     }
   }
@@ -55,7 +55,7 @@ Add to your Claude Code MCP settings:
       "args": ["/mnt/c/dev/projects/github/pi-hole-api/mcp-server/build/index.js"],
       "env": {
         "PIHOLE_DNS_API_URL": "http://<PIHOLE_IP>:3000",
-        "API_KEY": "<YOUR_API_KEY>"
+        "PI_HOLE_API_KEY": "<YOUR_API_KEY>"
       }
     }
   }
@@ -86,7 +86,7 @@ This launches the MCP Inspector UI where you can see all registered tools and ca
 
 **Connection refused:** Verify `PIHOLE_DNS_API_URL` is correct and the Pi-hole DNS API is running on the target host.
 
-**Authentication errors:** If the API has authentication enabled, set the `API_KEY` environment variable to match the API's configured key.
+**Authentication errors:** If the API has authentication enabled, set the `PI_HOLE_API_KEY` environment variable to match the API's configured key.
 
 **Build errors:** Run `npm install` first. Requires Node.js 18+ and TypeScript 5+.
 
